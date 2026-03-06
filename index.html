@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>數位著色活動</title>
+
+<style>
+
+body{
+font-family:Arial;
+text-align:center;
+background:#f2f2f2;
+margin:0;
+}
+
+h2{
+margin:10px;
+}
+
+.toolbar{
+margin:10px;
+}
+
+button{
+padding:6px 10px;
+font-size:16px;
+margin:4px;
+}
+
+.canvasBox{
+position:relative;
+width:95vw;
+max-width:1000px;
+margin:auto;
+}
+
+canvas{
+position:absolute;
+left:0;
+top:0;
+width:100%;
+height:auto;
+border:3px solid #444;
+touch-action:none;
+}
+
+.colorBtn{
+width:30px;
+height:30px;
+border-radius:50%;
+border:none;
+margin:3px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>🎨 數位著色活動</h2>
+
+<div class="toolbar">
+
+選擇著色圖：
+
+<select id="imageSelect">
+<option value="my-website\coloring.png">著色圖1</option>
+<option value="my-website\pngtree-medlar-hand-drawn-line-manuscript-black-and-white-png-image_4162790.png">著色圖2</option>
+<option value=my-website\images.png">著色圖3</option>
+</select>
+
+<br><br>
+
+顏色：
+
+<button class="colorBtn" style="background:red" onclick="setColor('red')"></button>
+<button class="colorBtn" style="background:blue" onclick="setColor('blue')"></button>
+<button class="colorBtn" style="background:green" onclick="setColor('green')"></button>
+<button class="colorBtn" style="background:yellow" onclick="setColor('yellow')"></button>
+<button class="colorBtn" style="background:black" onclick="setColor('black')"></button>
+
+<button onclick="eraser()">橡皮擦</button>
+
+<br><br>
+
+畫筆大小：
+
+<input type="range" id="brushSize" min="1" max="40" value="5">
+
+<span id="sizeLabel">5</span>
+
+<br><br>
+
+<button onclick="clearCanvas()">清除畫筆</button>
+<button onclick="download()">下載作品</button>
+
+</div>
+
+
+<div class="canvasBox">
+
+<canvas id="bgCanvas" width="1000" height="700"></canvas>
+<canvas id="drawCanvas" width="1000" height="700"></canvas>
+
+</div>
+
+
+<script>
+
+const bgCanvas=document.getElementById("bgCanvas");
+const bgCtx=bgCanvas.getContext("2d");
+
+const drawCanvas=document.getElementById("drawCanvas");
+const ctx=drawCanvas.getContext("2d");
+
+let drawing=false;
+let color="red";
+let brushSize=5;
+
+const img=new Image();
+
+function loadImage(url){
+
+img.src=url;
+
+img.onload=function(){
+
+bgCtx.clearRect(0,0,bgCanvas.width,bgCanvas.height);
+
+bgCtx.drawImage(img,0,0,bgCanvas.width,bgCanvas.height);
+
+clearCanvas();
+
+}
+
+}
+
+loadImage(document.getElementById("imageSelect").value);
+
+document.getElementById("imageSelect").addEventListener("change",function(){
+
+loadImage(this.value);
+
+});
+
+
+document.getElementById("brushSize").addEventListener("input",function(){
+
+brushSize=this.value;
+document.getElementById("sizeLabel").innerText=this.value;
+
+});
+
+function setColor(c){
+
+color=c;
+ctx.globalCompositeOperation="source-over";
+
+}
+
+function eraser(){
+
+ctx.globalCompositeOperation="destination-out";
+
+}
+
+
+drawCanvas.addEventListener("mousedown",start);
+drawCanvas.addEventListener("mouseup",stop);
+drawCanvas.addEventListener("mousemove",draw);
+
+drawCanvas.addEventListener("touchstart",start);
+drawCanvas.addEventListener("touchend",stop);
+drawCanvas.addEventListener("touchmove",draw);
+
+function start(e){
+
+drawing=true;
+
+}
+
+function stop(){
+
+drawing=false;
+ctx.beginPath();
+
+}
+
+function draw(e){
+
+if(!drawing)return;
+
+e.preventDefault();
+
+let rect=drawCanvas.getBoundingClientRect();
+
+let x,y;
+
+if(e.touches){
+
+x=e.touches[0].clientX-rect.left;
+y=e.touches[0].clientY-rect.top;
+
+}else{
+
+x=e.clientX-rect.left;
+y=e.clientY-rect.top;
+
+}
+
+ctx.lineWidth=brushSize;
+ctx.lineCap="round";
+ctx.strokeStyle=color;
+
+ctx.lineTo(x,y);
+ctx.stroke();
+
+ctx.beginPath();
+ctx.moveTo(x,y);
+
+}
+
+function clearCanvas(){
+
+ctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
+
+}
+
+function download(){
+
+const tempCanvas=document.createElement("canvas");
+tempCanvas.width=bgCanvas.width;
+tempCanvas.height=bgCanvas.height;
+
+const tempCtx=tempCanvas.getContext("2d");
+
+tempCtx.drawImage(bgCanvas,0,0);
+tempCtx.drawImage(drawCanvas,0,0);
+
+let link=document.createElement("a");
+
+link.download="mycolor.png";
+link.href=tempCanvas.toDataURL();
+
+link.click();
+
+}
+
+</script>
+
+</body>
+</html>
